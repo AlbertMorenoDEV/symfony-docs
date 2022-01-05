@@ -215,6 +215,55 @@ As with the failover transport, round-robin retries deliveries until
 a transport succeeds (or all fail). In contrast to the failover transport,
 it *spreads* the load across all its transports.
 
+Custom Transport Factories
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There is a way to easily create your own custom transport factory in case you need to do something special creating the actual transport.
+
+The new factory needs to implement `Symfony\Component\Mailer\Transport\TransportFactoryInterface`. To remove some boilerplate you can even extend from `Symfony\Component\Mailer\Transport\AbstractTransportFactory` which will simplify the new factory:
+
+.. code-block:: php
+    
+    final class CustomTransportFactory extends AbstractTransportFactory
+    {
+        public function create(Dsn $dsn): TransportInterface
+        {
+            // create and return the transport
+        }
+
+        protected function getSupportedSchemes(): array
+        {
+            return ['custom_schema'];
+        }
+    }
+
+Finally, declare the new factory in setting tag the tag `mailer.transport_factory`:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/services.yaml
+        mailer.transport_factory.custom:
+            class: App\CustomTransportFactory
+            parent: mailer.transport_factory.abstract
+            tags:
+              - {name: mailer.transport_factory}
+
+    .. code-block:: xml
+
+        <!-- config/services.xml -->
+        <service id="mailer.transport_factory.custom" class="App\CustomTransportFactory" parent="mailer.transport_factory.abstract">
+            <tag name="mailer.transport_factory" />
+        </service>
+
+    .. code-block:: php
+
+        // config/services.php
+        $services->set('mailer.transport_factory.custom', App\CustomTransportFactory::class)
+                 ->parent('mailer.transport_factory.abstract')
+                 ->tag('mailer.transport_factory');
+
 Creating & Sending Messages
 ---------------------------
 
